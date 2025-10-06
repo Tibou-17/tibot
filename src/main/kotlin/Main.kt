@@ -19,7 +19,10 @@ import net.dv8tion.jda.api.exceptions.RateLimitedException
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.managers.AudioManager
 import net.dv8tion.jda.api.requests.GatewayIntent
+import java.nio.file.Files
 import javax.security.auth.login.LoginException
+import kotlin.io.path.Path
+import kotlin.system.exitProcess
 
 
 class MusicBot : ListenerAdapter() {
@@ -40,15 +43,17 @@ class MusicBot : ListenerAdapter() {
         val manager: AudioManager = guild.audioManager
 
         val playerManager: AudioPlayerManager = DefaultAudioPlayerManager()
-        AudioSourceManagers.registerRemoteSources(playerManager)
 
         playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault())
         playerManager.registerSourceManager(YoutubeAudioSourceManager())
         playerManager.registerSourceManager(HttpAudioSourceManager())
         playerManager.registerSourceManager(LocalAudioSourceManager())
 
+        AudioSourceManagers.registerRemoteSources(playerManager)
+
         // MySendHandler should be your AudioSendHandler implementation
-        manager.sendingHandler = AudioPlayerSendHandler(playerManager.createPlayer())
+        val audioPlayer = playerManager.createPlayer()
+        manager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
         // Here we finally connect to the target voice channel
         // and it will automatically start pulling the audio from the MySendHandler instance
         manager.openAudioConnection(channel)
@@ -58,10 +63,12 @@ class MusicBot : ListenerAdapter() {
         playerManager.loadItem(url, object : AudioLoadResultHandler {
             override fun trackLoaded(track: AudioTrack) {
                 println("Track loaded")
+                audioPlayer.playTrack(track)
             }
 
             override fun playlistLoaded(playlist: AudioPlaylist) {
                 println("Playlist loaded")
+                audioPlayer.playTrack(playlist.tracks.first())
             }
 
             override fun noMatches() {
@@ -79,10 +86,15 @@ class MusicBot : ListenerAdapter() {
         @Throws(IllegalArgumentException::class, LoginException::class, RateLimitedException::class)
         @JvmStatic
         fun main(args: Array<String>) {
-            JDABuilder.createLight("", GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS,
-                GatewayIntent.GUILD_VOICE_STATES) // Use token provided as JVM argument
-                .addEventListeners(MusicBot()) // Register new MusicBot instance as EventListener
-                .build() // Build JDA - connect to discord
+            try {
+                val token = Files.readString(Path(".token")).trim()
+                JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS,
+                    GatewayIntent.GUILD_VOICE_STATES) // Use token provided as JVM argument
+                    .addEventListeners(MusicBot()) // Register new MusicBot instance as EventListener
+                    .build() // Build JDA - connect to discord
+            } catch (e: Exception) {
+                println(e.message)
+            }
         }
     }
 }
