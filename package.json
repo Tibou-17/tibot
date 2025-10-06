@@ -1,0 +1,24 @@
+{
+    "name": "tibot",
+    "version": "0.1.0",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "Automgen",
+    "license": "GPL-3.0-only",
+    "dependencies": {
+        "discord.js": "^14.22.1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tibou-17/tibot.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Tibou-17/tibot.git/issues"
+    },
+    "homepage": "https://github.com/Tibou-17/tibot.git#readme",
+    "description": "A Discord bot made with discord.js"
+}
