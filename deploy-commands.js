@@ -8,6 +8,9 @@ const commands = [];
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
+// Gestion du paramètre target
+const target = process.argv[2] === 'prod' ? 'prod' : 'dev';
+
 for (const folder of commandFolders) {
     // Grab all the command files from the commands directory you created earlier
     const commandsPath = path.join(foldersPath, folder);
@@ -27,32 +30,32 @@ for (const folder of commandFolders) {
 // Construct and prepare an instance of the REST module
 const rest = new REST().setToken(token);
 
-// Delete all previously deployed commands
-// For guild-based commands
-rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
-    .then(() => console.log('Successfully deleted all guild commands.'))
-    .catch(console.error);
-// For global commands
-rest.put(Routes.applicationCommands(clientId), { body: [] })
-    .then(() => console.log('Successfully deleted all global commands.'))
-    .catch(console.error);
-
 // and deploy your commands!
 (async () => {
     try {
-        console.log(`Started refreshing ${commands.length} application (/) commands.`);
+        console.log(`Started refreshing ${commands.length} application (/) commands for target: ${target}.`);
 
-        // The put method is used to fully refresh all commands in the guild with the current set
-        /*const data = await rest.put(
+        // Suppression des commandes existantes (optionnel, à adapter selon besoin)
+        await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] });
+        if (target === 'prod') {
+            await rest.put(Routes.applicationCommands(clientId), { body: [] });
+        }
+
+        // Déploiement selon le target
+        const data = await rest.put(
             Routes.applicationGuildCommands(clientId, guildId),
             { body: commands },
-        );*/
-        const data = await rest.put(
-            Routes.applicationCommands(clientId),
-            { body: commands },
         );
+        console.log(`Successfully reloaded ${data.length} guild application (/) commands.`);
 
-        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+
+        if (target === 'prod') {
+            const dataGlobal = await rest.put(
+                Routes.applicationCommands(clientId),
+                { body: commands },
+            );
+            console.log(`Successfully reloaded ${dataGlobal.length} global application (/) commands.`);
+        }
     } catch (error) {
         // And of course, make sure you catch and log any errors!
         console.error(error);
