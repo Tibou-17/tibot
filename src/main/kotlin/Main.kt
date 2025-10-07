@@ -58,7 +58,9 @@ class MusicBot : ListenerAdapter() {
         // and it will automatically start pulling the audio from the MySendHandler instance
         manager.openAudioConnection(channel)
 
-        val url = "https://www.youtube.com/watch?v=5vNM76gMxQ0&list=RDz1hEzIIuGm8&index=8"
+        // Value hardcoded only for POC
+        val url = event.message.contentDisplay.drop(5).trim()
+        println("URL=$url")
 
         playerManager.loadItem(url, object : AudioLoadResultHandler {
             override fun trackLoaded(track: AudioTrack) {
