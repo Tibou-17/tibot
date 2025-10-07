@@ -13,16 +13,16 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import dev.lavalink.youtube.YoutubeAudioSourceManager
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.RateLimitedException
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.managers.AudioManager
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.cache.CacheFlag
 import java.nio.file.Files
 import javax.security.auth.login.LoginException
 import kotlin.io.path.Path
-import kotlin.system.exitProcess
 
 
 class MusicBot : ListenerAdapter() {
@@ -39,7 +39,14 @@ class MusicBot : ListenerAdapter() {
         // This will get the first voice channel with the name "music"
         // matching by voiceChannel.getName().equalsIgnoreCase("music")
 
-        val channel: VoiceChannel = event.author.jda.voiceChannels.first()
+        val channel: AudioChannel? = event.member?.voiceState?.channel as AudioChannel?
+
+        if (channel == null) {
+            println("User is not connected to a voice channel.")
+            event.channel.sendMessage("You must be connected to a voice channel to use this command.").queue()
+            return
+        }
+
         val manager: AudioManager = guild.audioManager
 
         val playerManager: AudioPlayerManager = DefaultAudioPlayerManager()
@@ -56,7 +63,7 @@ class MusicBot : ListenerAdapter() {
         manager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
         // Here we finally connect to the target voice channel
         // and it will automatically start pulling the audio from the MySendHandler instance
-        manager.openAudioConnection(channel)
+        manager.openAudioConnection(channel!!)
 
         // Value hardcoded only for POC
         val url = event.message.contentDisplay.drop(5).trim()
@@ -92,6 +99,7 @@ class MusicBot : ListenerAdapter() {
                 val token = Files.readString(Path(".token")).trim()
                 JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS,
                     GatewayIntent.GUILD_VOICE_STATES) // Use token provided as JVM argument
+                    .enableCache(CacheFlag.VOICE_STATE)
                     .addEventListeners(MusicBot()) // Register new MusicBot instance as EventListener
                     .build() // Build JDA - connect to discord
             } catch (e: Exception) {
