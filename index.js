@@ -6,7 +6,13 @@ const { token } = require('./config.json');
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildVoiceStates
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.DirectMessages
+    ],
+    partials: [
+        'CHANNEL',
+        'MESSAGE'
     ],
     ws: {
         reconnect: {
