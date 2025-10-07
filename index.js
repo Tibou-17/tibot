@@ -22,6 +22,12 @@ const client = new Client({
         }
     }
 })
+const { createPlayer } = require('./player');
+const { YoutubeiExtractor } = require("discord-player-youtubei");
+const player = createPlayer(client);
+player.extractors.register(YoutubeiExtractor, {});
+
+module.exports = { client, player };
 
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
