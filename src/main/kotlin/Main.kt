@@ -29,8 +29,12 @@ class MusicBot : ListenerAdapter() {
     override fun onMessageReceived(event: MessageReceivedEvent) {
         // Make sure we only respond to events that occur in a guild
         if (!event.isFromGuild()) return
-        // This makes sure we only execute our code when someone sends a message with "!play"
-        if (!event.getMessage().getContentRaw().startsWith("!play")) return
+
+        val msg_content = event.message.contentRaw
+        println(msg_content)
+        if (!msg_content.startsWith("_play") && !msg_content.startsWith("><"))
+            return
+
         // Now we want to exclude messages from bots since we want to avoid command loops in chat!
         // this will include own messages as well for bot accounts
         // if this is not a bot make sure to check if this message is sent by yourself!
@@ -66,7 +70,7 @@ class MusicBot : ListenerAdapter() {
         manager.openAudioConnection(channel!!)
 
         // Value hardcoded only for POC
-        val url = event.message.contentDisplay.drop(5).trim()
+        val url = event.message.contentDisplay.split(" ")[1]
         println("URL=$url")
 
         playerManager.loadItem(url, object : AudioLoadResultHandler {
