@@ -18,9 +18,19 @@ dependencies {
     implementation("dev.lavalink.youtube:common:1.13.5")
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
 kotlin {
     jvmToolchain(19)
+}
+
+tasks.jar {
+    // FAILURE: Build failed with an exception.
+    // > Entry META-INF/versions/9/module-info.class is a duplicate but no duplicate handling strategy has been set.
+    // Please refer to https://docs.grdle.org/7.2/dsl/org.gradle.api.tasks.Copy.html#org.gradle.api.tasks.Copy:duplicatesStrategy for details.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes["Main-Class"] = "org.example.MusicBot"
+    }
+
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
