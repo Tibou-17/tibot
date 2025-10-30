@@ -85,10 +85,17 @@ class MusicBot : ListenerAdapter() {
             }
 
             override fun noMatches() {
+                event.channel.sendMessage("Aucune correspondance de bande-son trouvée avec le lien fourni.").queue()
                 println("No match")
             }
 
             override fun loadFailed(throwable: FriendlyException) {
+                event.channel.sendMessage("""
+                    Échec du chargement :
+                      - cause = ${throwable.cause}
+                      - severity = ${throwable.severity}
+                      - message = ${throwable.message}
+                """.trimIndent()).queue()
                 println("Load failed ${throwable.message} ${throwable.cause} ${throwable.severity}")
             }
         })
