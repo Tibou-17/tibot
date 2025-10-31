@@ -6,7 +6,8 @@ Nous en prendrons soin en corrigeant les bugs et en implémentant de nouvelles f
 # Roadmap
 
 - [x] Faire un [POC](https://fr.wikipedia.org/wiki/Preuve_de_concept) à partir de la doc de JDA : https://jda.wiki/using-jda/getting-started/.
-- [ ] Si validation du POC : Automatiser la compilation et le déploiement avec un Makefile.
+- [x] Automatiser la compilation avec un Makefile.
+- [ ] Ajouter les cibles install, deploy et man au Makefile.
 - [ ] Ajouter la gestion de la configuration par fichier (.ini ou .toml).
 - [ ] Ajouter la possibilité de rechercher des musiques (actuellement, seuls les liens sont supportés).
 - [ ] Réorganiser le code de la classe Main pour le rendre modulaire.
@@ -15,6 +16,22 @@ Nous en prendrons soin en corrigeant les bugs et en implémentant de nouvelles f
 - [ ] Voir pour la communication sur le projet avec les utilisateurs (notamment la publication du changelog).
 - [ ] Approfondir l'architecture du projet pour le rendre plus flexible et modulaire.
 - [ ] Publier une version avec le MVP (Minimum Viable Product).
+
+# Makefile
+
+Un Makefile est à votre disposition pour vous aider à exécuter certaines tâches récurrentes liées au projet.
+```
+$ make help
+
+Usage:
+  make [cible]
+
+Liste des cibles :
+  default   Compile le bot et ses dépendances avec gradlew dans le dossier ./build/libs/ .
+  clean     Supprimer les fichiers générés lors de la compilation. (Dossier ./build).
+  run       Compile le bot puis l'exécute sur la JVM local. (Tester avec openjdk 21).
+  help      Affiche la liste des cibles suivie d'une courte description.
+```
 
 # License
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
