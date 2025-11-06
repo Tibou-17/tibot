@@ -70,7 +70,13 @@ class MusicBot : ListenerAdapter() {
         manager.openAudioConnection(channel!!)
 
         // Value hardcoded only for POC
-        val url = event.message.contentDisplay.split(" ")[1]
+        val cmd = event.message.contentRaw
+        val url = if (cmd.contains("http")) {
+            cmd.split(" ")[1]
+        } else {
+            "ytsearch:" + cmd.split(" ").drop(1).joinToString(separator = " ")
+        }
+
         println("URL=$url")
 
         playerManager.loadItem(url, object : AudioLoadResultHandler {
