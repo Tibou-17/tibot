@@ -1,111 +1,105 @@
 package org.example
 
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
-import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
-import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
-import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager
-import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager
-import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack
-import dev.lavalink.youtube.YoutubeAudioSourceManager
 import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.entities.Guild
-import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.RateLimitedException
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-import net.dv8tion.jda.api.managers.AudioManager
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
 import java.nio.file.Files
 import javax.security.auth.login.LoginException
 import kotlin.io.path.Path
 
-
 class MusicBot : ListenerAdapter() {
+
+    val sessions = ArrayList<AudioSession>()
+
+    override fun onGuildVoiceUpdate(event: GuildVoiceUpdateEvent) {
+        if (event.channelLeft != null) {
+            if (event.channelLeft?.members?.size == 1) {
+                if (event.channelLeft?.members?.first()?.id == event.jda.selfUser.id) {
+                    getSession(event.guild.id)?.let {
+                        it.audioManager.closeAudioConnection()
+                        it.trackManager.clearQueue(it.audioPlayer, true)
+                        sessions.remove(it)
+                    }
+                    println("Fermeture de la session ${event.guild.id}")
+                }
+            }
+        }
+    }
+
     override fun onMessageReceived(event: MessageReceivedEvent) {
         // Make sure we only respond to events that occur in a guild
         if (!event.isFromGuild()) return
-
-        val msg_content = event.message.contentRaw
-        println(msg_content)
-        if (!msg_content.startsWith("_play") && !msg_content.startsWith("><"))
-            return
-
-        // Now we want to exclude messages from bots since we want to avoid command loops in chat!
-        // this will include own messages as well for bot accounts
-        // if this is not a bot make sure to check if this message is sent by yourself!
         if (event.getAuthor().isBot()) return
-        val guild: Guild = event.getGuild()
-        // This will get the first voice channel with the name "music"
-        // matching by voiceChannel.getName().equalsIgnoreCase("music")
+        val msg_content = event.message.contentRaw
 
-        val channel: AudioChannel? = event.member?.voiceState?.channel as AudioChannel?
+        val ses = getSession(event.guild.id)
 
-        if (channel == null) {
-            println("User is not connected to a voice channel.")
-            event.channel.sendMessage("You must be connected to a voice channel to use this command.").queue()
-            return
-        }
+        println(msg_content)
 
-        val manager: AudioManager = guild.audioManager
-
-        val playerManager: AudioPlayerManager = DefaultAudioPlayerManager()
-
-        playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault())
-        playerManager.registerSourceManager(YoutubeAudioSourceManager())
-        playerManager.registerSourceManager(HttpAudioSourceManager())
-        playerManager.registerSourceManager(LocalAudioSourceManager())
-
-        AudioSourceManagers.registerRemoteSources(playerManager)
-
-        // MySendHandler should be your AudioSendHandler implementation
-        val audioPlayer = playerManager.createPlayer()
-        manager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
-        // Here we finally connect to the target voice channel
-        // and it will automatically start pulling the audio from the MySendHandler instance
-        manager.openAudioConnection(channel!!)
-
-        // Value hardcoded only for POC
-        val cmd = event.message.contentRaw
-        val url = if (cmd.contains("http")) {
-            cmd.split(" ")[1]
-        } else {
-            "ytsearch:" + cmd.split(" ").drop(1).joinToString(separator = " ")
-        }
-
-        println("URL=$url")
-
-        playerManager.loadItem(url, object : AudioLoadResultHandler {
-            override fun trackLoaded(track: AudioTrack) {
-                println("Track loaded")
-                audioPlayer.playTrack(track)
+        when(msg_content.split(" ")[0]) {
+            "_play" -> {
+                if (ses != null) ses.play(event) else sessions.add(AudioSession(event))
             }
+            "_skip" -> {
+                val args = msg_content.split(" ")
 
-            override fun playlistLoaded(playlist: AudioPlaylist) {
-                println("Playlist loaded")
-                audioPlayer.playTrack(playlist.tracks.first())
+                val numberToSkip = if (args.size > 1) args[1].toIntOrNull() else null
+
+                if (numberToSkip == null || numberToSkip < 1)
+                    event.channel.sendMessage("Bande-son ${ses?.trackManager?.skip(ses.audioPlayer)} passer.").queue()
+                else
+                    event.channel.sendMessage("${ses?.trackManager?.skip(ses.audioPlayer, numberToSkip)} bande-sons passer.").queue()
             }
-
-            override fun noMatches() {
-                event.channel.sendMessage("Aucune correspondance de bande-son trouvée avec le lien fourni.").queue()
-                println("No match")
+            "_clear" -> {
+                ses?.trackManager?.clearQueue(ses.audioPlayer, msg_content.contains("--all"))
             }
-
-            override fun loadFailed(throwable: FriendlyException) {
+            "_list" -> {
+                if (ses?.trackManager?.queue?.isEmpty() == true)
+                    event.channel.sendMessage("File d'attente vide")
+                else {
+                    val prefix = "**" + ses?.audioPlayer?.playingTrack?.info?.title + "**\n"
+                    event.channel.sendMessage(
+                        ses?.trackManager?.queue?.joinToString(separator = "", prefix = prefix, postfix = "# ...")
+                        { "- " + it.info.title + "\n" }.toString().take(1990)).queue()
+                }
+            }
+            "_chut" -> {
+                ses?.audioPlayer?.isPaused = !ses.audioPlayer.isPaused
+            }
+            "_help" -> {
                 event.channel.sendMessage("""
-                    Échec du chargement :
-                      - cause = ${throwable.cause}
-                      - severity = ${throwable.severity}
-                      - message = ${throwable.message}
-                """.trimIndent()).queue()
-                println("Load failed ${throwable.message} ${throwable.cause} ${throwable.severity}")
-            }
-        })
+                    Utilisation :
+                    **_play** *<url | texte à chercher>* [--first] [--random] [--all]
+                    -# Effectu une recherche de l'url ou du texte et l'ajoute à la file d'attente
+                    -# Si l'option --first est spécifier la ou les bande-sons serons ajouter juste après la bande-son actuels
+                    -# Si l'option --random est spécifier mélange aléatoirement la playlist avant de l'ajouter dans la file d'attente
+                    -# Si l'options --all est spécifier cela ajoutera à la file d'attente toutes les bande-sons du résultat de la recherche (par défaut seul le meilleur résultat est ajouter).
+                    **_skip** [n]
+                    -# Passer à la n prochaine bande-sons dans la file d'attente. (n max = 100).
+                    **_clear**
+                    -# Vide la file d'attente
+                    -# Si l'options --all et spécifier cela enlevera la bande-son actuel également.
+                    **_list**
+                    -# Affiche la liste des bande-son dans la file d'attente
+                    **_chut**
+                    -# Faire taire le bot.
 
+                    Legende :
+                        **texte gras** = à taper exactement comme indiqué
+                        *<texte italique>* = à remplacer par l'argument approprié
+                        [-abc] = tous les arguments entre [ ] sont facultatifs
+                        -a|-b = les options séparées par | ne peuvent pas être utilisées simultanément
+                """.trimIndent()).queue()
+            }
+        }
+    }
+
+    fun getSession(guildId: String): AudioSession? {
+        return sessions.find { it.guild.id == guildId }
     }
 
     companion object {
