@@ -36,6 +36,9 @@ class MusicBot : ListenerAdapter() {
         if (event.getAuthor().isBot()) return
         val msg_content = event.message.contentRaw
 
+        if (!msg_content.startsWith("_"))
+            return
+
         val ses = getSession(event.guild.id)
 
         println(msg_content)
