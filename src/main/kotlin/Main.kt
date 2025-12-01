@@ -40,11 +40,21 @@ class MusicBot : ListenerAdapter() {
 
         println(msg_content)
 
+        if (ses == null && (!msg_content.startsWith("_play") && !msg_content.startsWith("_help"))){
+            event.channel.sendMessage("Aucune session de musique n'est en cours.\n**Utilisez _help pour obtenir de l'aide.**").queue()
+            return
+        }
+
         when(msg_content.split(" ")[0]) {
             "_play" -> {
                 if (ses != null) ses.play(event) else sessions.add(AudioSession(event))
             }
             "_skip" -> {
+                if (ses?.audioPlayer?.playingTrack == null && ses?.trackManager?.queue?.isEmpty() == true) {
+                    event.channel.sendMessage("Aucune bande-son à passer.").queue()
+                    return
+                }
+
                 val args = msg_content.split(" ")
 
                 val numberToSkip = if (args.size > 1) args[1].toIntOrNull() else null
@@ -58,8 +68,8 @@ class MusicBot : ListenerAdapter() {
                 ses?.trackManager?.clearQueue(ses.audioPlayer, msg_content.contains("--all"))
             }
             "_list" -> {
-                if (ses?.trackManager?.queue?.isEmpty() == true)
-                    event.channel.sendMessage("File d'attente vide")
+                if (ses?.trackManager?.queue?.isEmpty() == true && ses?.audioPlayer?.playingTrack == null)
+                    event.channel.sendMessage("File d'attente vide.").queue()
                 else {
                     val prefix = "**" + ses?.audioPlayer?.playingTrack?.info?.title + "**\n"
                     event.channel.sendMessage(
@@ -84,7 +94,7 @@ class MusicBot : ListenerAdapter() {
                     -# Vide la file d'attente
                     -# Si l'options --all et spécifier cela enlevera la bande-son actuel également.
                     **_list**
-                    -# Affiche la liste des bande-son dans la file d'attente
+                    -# Affiche la liste des bande-son dans la file d'attente ainsi que la bande-son courante
                     **_chut**
                     -# Faire taire le bot.
 

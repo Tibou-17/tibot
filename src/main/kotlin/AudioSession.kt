@@ -45,11 +45,11 @@ class AudioSession(event: MessageReceivedEvent) {
             event.channel.sendMessage("You must be connected to a voice channel to use this command.").queue()
         } else {
             if (!guild.selfMember.hasPermission(channel, Permission.VIEW_CHANNEL))
-                event.channel.sendMessage("J'ai pas la permission de voir le salon ${channel.name}.")
+                event.channel.sendMessage("J'ai pas la permission de voir le salon ${channel.name}.").queue()
             else if (!guild.selfMember.hasPermission(channel, Permission.VOICE_CONNECT))
-                event.channel.sendMessage("J'ai pas la permission de rejoindre le salon ${channel.name}.")
+                event.channel.sendMessage("J'ai pas la permission de rejoindre le salon ${channel.name}.").queue()
             else if (!guild.selfMember.hasPermission(channel, Permission.VOICE_SPEAK))
-                event.channel.sendMessage("J'ai pas la permission de parler dans le salon ${channel.name}.")
+                event.channel.sendMessage("J'ai pas la permission de parler dans le salon ${channel.name}.").queue()
             else
                 audioManager.openAudioConnection(channel!!)
         }
@@ -77,6 +77,11 @@ class AudioSession(event: MessageReceivedEvent) {
             shuffle (random) = $shuffle
             addInFirstPosition = $addInFirstPosition
         """.trimIndent())
+
+        if (url == "ytsearch:") {
+            event.channel.sendMessage("Veuillez fournir une URL ou un texte à rechercher après _play.\n**Utilisez _help pour obtenir de l'aide.**").queue()
+            return
+        }
 
         audioPlayerManager.loadItem(url, object : AudioLoadResultHandler {
             override fun trackLoaded(track: AudioTrack) {
