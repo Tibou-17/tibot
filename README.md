@@ -5,17 +5,16 @@ Nous en prendrons soin en corrigeant les bugs et en implémentant de nouvelles f
 
 # Roadmap
 
-- [x] Faire un [POC](https://fr.wikipedia.org/wiki/Preuve_de_concept) à partir de la doc de JDA : https://jda.wiki/using-jda/getting-started/.
-- [x] Automatiser la compilation avec un Makefile.
-- [ ] Ajouter les cibles install, deploy et man au Makefile.
-- [ ] Ajouter la gestion de la configuration par fichier (.ini ou .toml).
-- [ ] Ajouter la possibilité de rechercher des musiques (actuellement, seuls les liens sont supportés).
-- [ ] Réorganiser le code de la classe Main pour le rendre modulaire.
-- [ ] Ajouter la gestion d'une file d'attente.
-- [ ] Ajouter un système de commandes complet. Discuter avec les utilisateurs pour déterminer leurs préférences (ex. : commandes slash Discord ?).
-- [ ] Voir pour la communication sur le projet avec les utilisateurs (notamment la publication du changelog).
-- [ ] Approfondir l'architecture du projet pour le rendre plus flexible et modulaire.
-- [ ] Publier une version avec le MVP (Minimum Viable Product).
+- :heavy_check_mark: Faire un [POC](https://fr.wikipedia.org/wiki/Preuve_de_concept) à partir de la doc de JDA : https://jda.wiki/using-jda/getting-started/.
+- :heavy_check_mark: Automatiser la compilation avec un Makefile.
+- :heavy_check_mark: Ajouter la possibilité de rechercher des musiques (actuellement, seuls les liens sont supportés).
+- :heavy_check_mark: Ajouter la gestion d'une file d'attente.
+- :x: Ajouter la gestion de la configuration par fichier (.ini ou .toml).
+- :question: Ajouter les cibles install, deploy et man au Makefile.
+- :question: Ajouter un système de commandes complet. Discuter avec les utilisateurs pour déterminer leurs préférences (ex. : commandes slash Discord ?).
+- :question: Réorganiser le code de la classe Main pour le rendre modulaire.
+- :question: Voir pour la communication sur le projet avec les utilisateurs (notamment la publication du changelog).
+- :question: Approfondir l'architecture du projet pour le rendre plus flexible et modulaire.
 
 # Makefile
 
