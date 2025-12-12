@@ -54,30 +54,38 @@ class MusicBot : ListenerAdapter() {
             }
             "_skip" -> {
                 if (ses?.audioPlayer?.playingTrack == null && ses?.trackManager?.queue?.isEmpty() == true) {
-                    event.channel.sendMessage("Aucune bande-son à passer.").queue()
+                    event.channel.sendMessage("Aucune bande son à passer.").queue()
                     return
                 }
-
+                if (msg_content.contains("--all")) {
+                    ses?.trackManager?.clearQueue(ses.audioPlayer, true)
+                    event.channel.sendMessage("Toutes les bandes son ont été passées.").queue()
+                    return
+                }
                 val args = msg_content.split(" ")
 
                 val numberToSkip = if (args.size > 1) args[1].toIntOrNull() else null
 
                 if (numberToSkip == null || numberToSkip < 1)
-                    event.channel.sendMessage("Bande-son ${ses?.trackManager?.skip(ses.audioPlayer)} passer.").queue()
+                    event.channel.sendMessage("Bande son ${ses?.trackManager?.skip(ses.audioPlayer)} passer.").queue()
                 else
-                    event.channel.sendMessage("${ses?.trackManager?.skip(ses.audioPlayer, numberToSkip)} bande-sons passer.").queue()
+                    event.channel.sendMessage("${ses?.trackManager?.skip(ses.audioPlayer, numberToSkip)} bandes son passer.").queue()
             }
             "_clear" -> {
                 ses?.trackManager?.clearQueue(ses.audioPlayer, msg_content.contains("--all"))
             }
             "_list" -> {
-                if (ses?.trackManager?.queue?.isEmpty() == true && ses?.audioPlayer?.playingTrack == null)
+                if (ses?.trackManager?.queue?.isEmpty() == true && ses.audioPlayer?.playingTrack == null)
                     event.channel.sendMessage("File d'attente vide.").queue()
                 else {
-                    val prefix = "**" + ses?.audioPlayer?.playingTrack?.info?.title + "**\n"
+                    val prefix = ses?.audioPlayer?.playingTrack?.let {
+                        "**" + it.info.title + " [" + human_readable_duration(it.position) + "/" +
+                        human_readable_duration(it.duration) + "]**\n"
+                    }.orEmpty()
+
                     event.channel.sendMessage(
                         ses?.trackManager?.queue?.joinToString(separator = "", prefix = prefix, postfix = "# ...")
-                        { "- " + it.info.title + "\n" }.toString().take(1990)).queue()
+                        { "- " + it.info.title + " **[" + human_readable_duration(it.duration) + "]**\n" }.toString().take(1990)).queue()
                 }
             }
             "_chut" -> {
@@ -88,16 +96,17 @@ class MusicBot : ListenerAdapter() {
                     Utilisation :
                     **_play** *<url | texte à chercher>* [--first] [--random] [--all]
                     -# Effectu une recherche de l'url ou du texte et l'ajoute à la file d'attente
-                    -# Si l'option --first est spécifier la ou les bande-sons serons ajouter juste après la bande-son actuels
+                    -# Si l'option --first est spécifier la ou les bandes son serons ajouter juste après la bande son actuels
                     -# Si l'option --random est spécifier mélange aléatoirement la playlist avant de l'ajouter dans la file d'attente
-                    -# Si l'options --all est spécifier cela ajoutera à la file d'attente toutes les bande-sons du résultat de la recherche (par défaut seul le meilleur résultat est ajouter).
+                    -# Si l'options --all est spécifier cela ajoutera à la file d'attente toutes les bandes son du résultat de la recherche (par défaut seul le meilleur résultat est ajouter).
                     **_skip** [n]
-                    -# Passer à la n prochaine bande-sons dans la file d'attente. (n max = 100).
+                    -# Passer à la n prochaine bandes son dans la file d'attente. (n max = 100).
+                    -# Si l'options --all est spécifier toutes les bandes son seront passées (équivalent à clear --all).
                     **_clear**
                     -# Vide la file d'attente
-                    -# Si l'options --all et spécifier cela enlevera la bande-son actuel également.
+                    -# Si l'options --all est spécifier cela enlevera la bande son actuel également.
                     **_list**
-                    -# Affiche la liste des bande-son dans la file d'attente ainsi que la bande-son courante
+                    -# Affiche la liste des bande son dans la file d'attente ainsi que la bande son courante
                     **_chut**
                     -# Faire taire le bot.
 
@@ -109,6 +118,13 @@ class MusicBot : ListenerAdapter() {
                 """.trimIndent()).queue()
             }
         }
+    }
+
+    fun human_readable_duration(duration: Long): String {
+        val minutes = duration / 1000 / 60
+        val seconds = duration / 1000 % 60
+
+        return "$minutes:${String.format("%02d", seconds)}"
     }
 
     fun getSession(guildId: String): AudioSession? {

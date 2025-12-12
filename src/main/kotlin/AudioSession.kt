@@ -93,13 +93,13 @@ class AudioSession(event: MessageReceivedEvent) {
                 //println(playlist.tracks.joinToString(separator = "\n") { it.info.title })
                 if (cmd.contains("--all")) {
                     trackManager.addToQueue(playlist, audioPlayer, shuffle, addInFirstPosition)
-                    event.channel.sendMessage("Une liste de ${playlist.tracks.size} bande-sons à était ajouter à la file d'attente").queue()
+                    event.channel.sendMessage("Une liste de ${playlist.tracks.size} bandes son à était ajouter à la file d'attente").queue()
                 } else
                     trackManager.addToQueue(playlist.tracks.first(), audioPlayer, addInFirstPosition)
             }
 
             override fun noMatches() {
-                event.channel.sendMessage("Aucune correspondance de bande-son trouvée avec le lien fourni.").queue()
+                event.channel.sendMessage("Aucune correspondance de bande son trouvée avec le lien fourni.").queue()
                 println("No match")
             }
 
