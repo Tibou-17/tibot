@@ -23,8 +23,16 @@ class MusicBot : ListenerAdapter() {
                         it.audioManager.closeAudioConnection()
                         it.trackManager.clearQueue(it.audioPlayer, true)
                         sessions.remove(it)
+                        println("Fermeture de la session ${event.guild.id}")
                     }
-                    println("Fermeture de la session ${event.guild.id}")
+                }
+            }
+            if (event.entity.id == event.jda.selfUser.id && event.newValue == null) {
+                getSession(event.guild.id)?.let {
+                    it.audioManager.closeAudioConnection()
+                    it.trackManager.clearQueue(it.audioPlayer, true)
+                    sessions.remove(it)
+                    println("Fermeture de la session ${event.guild.id} due à une déconnexion")
                 }
             }
         }
