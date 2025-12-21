@@ -60,6 +60,15 @@ class MusicBot : ListenerAdapter() {
             "_play" -> {
                 if (ses != null) ses.play(event) else sessions.add(AudioSession(event))
             }
+            "_quit" -> {
+                getSession(event.guild.id)?.let {
+                    it.audioManager.closeAudioConnection()
+                    it.trackManager.clearQueue(it.audioPlayer, true)
+                    sessions.remove(it)
+                    println("Fermeture de la session ${event.guild.id}")
+                    event.channel.sendMessage("Fermeture de la session de musique :white_check_mark:.").queue()
+                }
+            }
             "_skip" -> {
                 if (ses?.audioPlayer?.playingTrack == null && ses?.trackManager?.queue?.isEmpty() == true) {
                     event.channel.sendMessage("Aucune bande son à passer.").queue()
@@ -117,6 +126,8 @@ class MusicBot : ListenerAdapter() {
                     -# Affiche la liste des bande son dans la file d'attente ainsi que la bande son courante
                     **_chut**
                     -# Faire taire le bot.
+                    **_quit**
+                    -# Ferme l'audiosession et déconnecte le bot"
 
                     Legende :
                         **texte gras** = à taper exactement comme indiqué
