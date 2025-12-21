@@ -14,7 +14,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("net.dv8tion:JDA:6.1.1")
-    implementation("dev.arbjerg:lavaplayer:2.2.4")
+    implementation("dev.arbjerg:lavaplayer:2.2.6")
     implementation("dev.lavalink.youtube:common:1.16.0")
 }
 
