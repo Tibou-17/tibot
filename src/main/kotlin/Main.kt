@@ -1,5 +1,6 @@
 package org.example
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
@@ -84,18 +85,39 @@ class MusicBot : ListenerAdapter() {
                 ses?.trackManager?.clearQueue(ses.audioPlayer, msg_content.contains("--all"))
             }
             "_list" -> {
-                if (ses?.trackManager?.queue?.isEmpty() == true && ses.audioPlayer?.playingTrack == null)
+                if (ses == null || (ses.trackManager.queue.isEmpty() && ses.audioPlayer?.playingTrack == null)) {
                     event.channel.sendMessage("File d'attente vide.").queue()
-                else {
-                    val prefix = ses?.audioPlayer?.playingTrack?.let {
-                        "**" + it.info.title + " [" + human_readable_duration(it.position) + "/" +
-                        human_readable_duration(it.duration) + "]**\n"
-                    }.orEmpty()
-
-                    event.channel.sendMessage(
-                        ses?.trackManager?.queue?.joinToString(separator = "", prefix = prefix, postfix = "# ...")
-                        { "- " + it.info.title + " **[" + human_readable_duration(it.duration) + "]**\n" }.toString().take(1990)).queue()
+                    return
                 }
+
+                if (msg_content.contains("--delete|-d".toRegex())) {
+                    val args = msg_content.split("--delete|-d".toRegex())
+                    val numberToDelete = if (args.size > 1) args[1].trim().toIntOrNull() else null
+                    println("delete $numberToDelete with queue size = ${ses.trackManager.queue.size}")
+                    if (numberToDelete != null) {
+                        if (numberToDelete > 0 && numberToDelete <= ses.trackManager.queue.size) {
+                            val trackToDelete = ses.trackManager.queue.elementAt(numberToDelete -1)
+                            event.channel.sendMessage(
+                                "La bande son ${format_track_title(trackToDelete)} a été retirée de la file d'attente.")
+                                .queue()
+                            ses.trackManager.queue.remove(trackToDelete)
+                        }
+                    }
+                    return
+                }
+
+                val prefix = ses.audioPlayer.playingTrack.let {
+                    "**" + format_track_title(it) + " [" + human_readable_duration(it.position) + "/" +
+                    human_readable_duration(it.duration) + "]**\n"
+                }
+                val totalDuration = ses.trackManager.queue.sumOf { it.duration }
+
+                event.channel.sendMessage(
+                    ses.trackManager.queue.withIndex().joinToString(separator = "", prefix = prefix)
+                    { (index, track) -> "$index. " + format_track_title(track) + " **[" + human_readable_duration(track.duration) + "]**\n" }
+                    .take(1930).let { it.substring(0, it.lastIndexOf('\n')) }
+                    + "\n. . .\n**__${ses.trackManager.queue.size} bandes son au total dans la file d'attente__ [${human_readable_duration(totalDuration)}]**")
+                    .queue()
             }
             "_chut" -> {
                 ses?.audioPlayer?.isPaused = !ses.audioPlayer.isPaused
@@ -114,8 +136,9 @@ class MusicBot : ListenerAdapter() {
                     **_clear**
                     -# Vide la file d'attente
                     -# Si l'options --all est spécifier cela enlevera la bande son actuel également.
-                    **_list**
-                    -# Affiche la liste des bande son dans la file d'attente ainsi que la bande son courante
+                    **_list** [-d | --delete *<index>*]
+                    -# Affiche la liste des bandes son dans la file d'attente ainsi que la bande son courante
+                    -# Si l'option -d ou --delete est spécifiée, supprimez la bande son à l'index indiqué
                     **_chut**
                     -# Faire taire le bot.
 
@@ -129,11 +152,20 @@ class MusicBot : ListenerAdapter() {
         }
     }
 
-    fun human_readable_duration(duration: Long): String {
-        val minutes = duration / 1000 / 60
-        val seconds = duration / 1000 % 60
+    fun format_track_title(track: AudioTrack?): String {
+        return "[${track?.info?.title?.replace("_", "")?.replace("*", "")}](<${track?.info?.uri}>)"
+    }
 
-        return "$minutes:${String.format("%02d", seconds)}"
+    fun human_readable_duration(duration: Long): String {
+        val hours = duration / 1000 / 60 / 60
+        val minutes = (duration / 1000 / 60) % 60
+        val seconds = (duration / 1000) % 60
+
+        return if (hours > 0) {
+            String.format("%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format("%02d:%02d", minutes, seconds)
+        }
     }
 
     fun getSession(guildId: String): AudioSession? {
