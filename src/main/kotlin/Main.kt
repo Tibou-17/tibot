@@ -122,11 +122,19 @@ class MusicBot : ListenerAdapter() {
             "_chut" -> {
                 ses?.audioPlayer?.isPaused = !ses.audioPlayer.isPaused
             }
+            "_leave" -> {
+                getSession(event.guild.id)?.let {
+                    it.audioManager.closeAudioConnection()
+                    it.trackManager.clearQueue(it.audioPlayer, true)
+                    sessions.remove(it)
+                    println("Fermeture de la session ${event.guild.id} avec la commande _leave")
+                }
+            }
             "_help" -> {
                 event.channel.sendMessage("""
                     Utilisation :
                     **_play** *<url | texte à chercher>* [--first] [--random] [--all]
-                    -# Effectu une recherche de l'url ou du texte et l'ajoute à la file d'attente
+                    -# Effectue une recherche de l'URL ou du texte et l'ajoute à la file d'attente
                     -# Si l'option --first est spécifier la ou les bandes son serons ajouter juste après la bande son actuels
                     -# Si l'option --random est spécifier mélange aléatoirement la playlist avant de l'ajouter dans la file d'attente
                     -# Si l'options --all est spécifier cela ajoutera à la file d'attente toutes les bandes son du résultat de la recherche (par défaut seul le meilleur résultat est ajouter).
@@ -141,6 +149,8 @@ class MusicBot : ListenerAdapter() {
                     -# Si l'option -d ou --delete est spécifiée, supprimez la bande son à l'index indiqué
                     **_chut**
                     -# Faire taire le bot.
+                    **_leave**
+                    -# Déconnecte le bot du salon vocal
 
                     Legende :
                         **texte gras** = à taper exactement comme indiqué
