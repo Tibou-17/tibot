@@ -1,7 +1,9 @@
 package org.example
 
+import club.minnced.discord.jdave.interop.JDaveSessionFactory
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.audio.AudioModuleConfig
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
@@ -193,6 +195,7 @@ class MusicBot : ListenerAdapter() {
                     .enableCache(CacheFlag.VOICE_STATE)
                     .addEventListeners(MusicBot()) // Register new MusicBot instance as EventListener
                     .setActivity(Activity.customStatus("Écrivez _help ou _play"))
+                    .setAudioModuleConfig(AudioModuleConfig().withDaveSessionFactory(JDaveSessionFactory()))
                     .build() // Build JDA - connect to discord
             } catch (e: Exception) {
                 println(e.message)
