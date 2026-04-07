@@ -13,7 +13,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import dev.lavalink.youtube.YoutubeAudioSourceManager
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Guild
+import net.dv8tion.jda.api.entities.GuildVoiceState
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
+import net.dv8tion.jda.api.events.message.GenericMessageEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.managers.AudioManager
 
@@ -38,26 +41,30 @@ class AudioSession(event: MessageReceivedEvent) {
         AudioSourceManagers.registerRemoteSources(audioPlayerManager)
         audioManager.sendingHandler = AudioPlayerSendHandler(audioPlayer)
 
-        val channel: AudioChannel? = event.member?.voiceState?.channel as AudioChannel?
-
-        if (channel == null) {
-            println("User is not connected to a voice channel.")
-            event.channel.sendMessage("You must be connected to a voice channel to use this command.").queue()
-        } else {
-            if (!guild.selfMember.hasPermission(channel, Permission.VIEW_CHANNEL))
-                event.channel.sendMessage("J'ai pas la permission de voir le salon ${channel.name}.").queue()
-            else if (!guild.selfMember.hasPermission(channel, Permission.VOICE_CONNECT))
-                event.channel.sendMessage("J'ai pas la permission de rejoindre le salon ${channel.name}.").queue()
-            else if (!guild.selfMember.hasPermission(channel, Permission.VOICE_SPEAK))
-                event.channel.sendMessage("J'ai pas la permission de parler dans le salon ${channel.name}.").queue()
-            else
-                audioManager.openAudioConnection(channel!!)
-        }
-
         audioPlayer.addListener(trackManager)
 
-        play(event)
         println("Création de la session ${guild.id}")
+    }
+
+    fun connect (audio_channel: AudioChannel, text_channel: MessageChannel) {
+        if (!guild.selfMember.hasPermission(audio_channel, Permission.VIEW_CHANNEL))
+            text_channel.sendMessage("J'ai pas la permission de voir le salon ${audio_channel.name}.").queue()
+        else if (!guild.selfMember.hasPermission(audio_channel, Permission.VOICE_CONNECT))
+            text_channel.sendMessage("J'ai pas la permission de rejoindre le salon ${audio_channel.name}.").queue()
+        else if (!guild.selfMember.hasPermission(audio_channel, Permission.VOICE_SPEAK))
+            text_channel.sendMessage("J'ai pas la permission de parler dans le salon ${audio_channel.name}.").queue()
+        else {
+            try {
+                audioManager.openAudioConnection(audio_channel)
+            }catch (e: Exception) {
+                println("AudioSession::connect | ${e.message} ${e.cause}")
+                text_channel.sendMessage("""
+                    Une erreur s'est produite :
+                      - cause = ${e.cause}
+                      - message = ${e.message}
+                """.trimIndent()).queue()
+            }
+        }
     }
 
     fun play (event: MessageReceivedEvent) {

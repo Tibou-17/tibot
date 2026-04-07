@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.audio.AudioModuleConfig
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.exceptions.RateLimitedException
@@ -62,7 +63,26 @@ class MusicBot : ListenerAdapter() {
 
         when(msg_content.split(" ")[0]) {
             "_play" -> {
-                if (ses != null) ses.play(event) else sessions.add(AudioSession(event))
+                val user_audio_channel: AudioChannel? = event.member?.voiceState?.channel as AudioChannel?
+
+                if (user_audio_channel == null) {
+                    println("L'utilisateur n'est pas connecté à un salon vocal.")
+                    event.channel.sendMessage("Vous devez être connecté à un salon vocal pour utiliser cette commande.").queue()
+                    return
+                }
+
+                if (ses != null) {
+                    if (!ses.audioManager.isConnected)
+                        ses.connect(user_audio_channel, event.channel)
+
+                    ses.play(event)
+                } else {
+                    AudioSession(event).run {
+                        sessions.add(this)
+                        connect(user_audio_channel, event.channel)
+                        play(event)
+                    }
+                }
             }
             "_skip" -> {
                 if (ses?.audioPlayer?.playingTrack == null && ses?.trackManager?.queue?.isEmpty() == true) {
