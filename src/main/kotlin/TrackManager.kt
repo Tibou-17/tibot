@@ -70,7 +70,7 @@ class TrackManager(): AudioEventAdapter() {
                 }
             }
         }
-        if (returnStr == "") returnStr = audioPlayer.playingTrack?.info?.title
+        if (returnStr == "") returnStr = format_track_title(audioPlayer.playingTrack)
         playNextTrack(audioPlayer, false)
         return returnStr
     }

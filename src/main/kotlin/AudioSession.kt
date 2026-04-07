@@ -92,32 +92,35 @@ class AudioSession(event: MessageReceivedEvent) {
 
         audioPlayerManager.loadItem(url, object : AudioLoadResultHandler {
             override fun trackLoaded(track: AudioTrack) {
-                println("Track loaded")
+                println("AudioSession::play::trackLoaded")
+                event.channel.sendMessage("La bande son ${format_track_title(track)} a été ajoutée ${if (addInFirstPosition) "**au début** de" else "à"} la file d'attente.").queue()
                 trackManager.addToQueue(track, audioPlayer, addInFirstPosition)
             }
 
             override fun playlistLoaded(playlist: AudioPlaylist) {
-                //println(playlist.tracks.joinToString(separator = "\n") { it.info.title })
+                println("AudioSession::play::playlistLoaded")
                 if (cmd.contains("--all")) {
                     trackManager.addToQueue(playlist, audioPlayer, shuffle, addInFirstPosition)
-                    event.channel.sendMessage("Une liste de ${playlist.tracks.size} bandes son à était ajouter à la file d'attente").queue()
-                } else
+                    event.channel.sendMessage("Une liste de ${playlist.tracks.size} bandes son ${if (shuffle) "**mélanger aléatoirement**, " else ""}a été ajoutée ${if (addInFirstPosition) "**au début** de" else "à"} la file d'attente.").queue()
+                } else {
                     trackManager.addToQueue(playlist.tracks.first(), audioPlayer, addInFirstPosition)
+                    event.channel.sendMessage("La bande son ${format_track_title(playlist.tracks.first())} a été ajoutée ${if (addInFirstPosition) "**au début** de" else "à"} la file d'attente.").queue()
+                }
             }
 
             override fun noMatches() {
+                println("AudioSession::play::noMatches")
                 event.channel.sendMessage("Aucune correspondance de bande son trouvée avec le lien fourni.").queue()
-                println("No match")
             }
 
             override fun loadFailed(throwable: FriendlyException) {
+                println("AudioSession::play::loadFailed ${throwable.message} ${throwable.cause} ${throwable.severity}")
                 event.channel.sendMessage("""
                     Échec du chargement :
                       - cause = ${throwable.cause}
                       - severity = ${throwable.severity}
                       - message = ${throwable.message}
                 """.trimIndent()).queue()
-                println("Load failed ${throwable.message} ${throwable.cause} ${throwable.severity}")
             }
         })
     }

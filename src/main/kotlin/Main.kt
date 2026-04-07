@@ -105,6 +105,7 @@ class MusicBot : ListenerAdapter() {
             }
             "_clear" -> {
                 ses?.trackManager?.clearQueue(ses.audioPlayer, msg_content.contains("--all"))
+                event.channel.sendMessage("La file d'attente a été vidée${if (msg_content.contains("--all")) " et la bande son actuelle supprimée." else "."}").queue()
             }
             "_list" -> {
                 if (ses == null || (ses.trackManager.queue.isEmpty() && ses.audioPlayer?.playingTrack == null)) {
@@ -142,6 +143,10 @@ class MusicBot : ListenerAdapter() {
                     .queue()
             }
             "_chut" -> {
+                if (ses?.audioPlayer?.isPaused == true)
+                    event.channel.sendMessage("Reprise de la lecture de la bande son actuelle.").queue()
+                else
+                    event.channel.sendMessage("Arrêt de la lecture de la bande son actuelle.").queue()
                 ses?.audioPlayer?.isPaused = !ses.audioPlayer.isPaused
             }
             "_leave" -> {
@@ -150,13 +155,14 @@ class MusicBot : ListenerAdapter() {
                     it.trackManager.clearQueue(it.audioPlayer, true)
                     sessions.remove(it)
                     println("Fermeture de la session ${event.guild.id} avec la commande _leave")
+                    event.channel.sendMessage("Fermeture de la session audio.").queue()
                 }
             }
             "_help" -> {
                 event.channel.sendMessage("""
                     Utilisation :
                     **_play** *<url | texte à chercher>* [--first] [--random] [--all]
-                    -# Effectue une recherche de l'URL ou du texte et l'ajoute à la file d'attente
+                    -# Effectue une recherche de l'URL ou du texte, puis ajoute le résultat à la file d'attente
                     -# Si l'option --first est spécifier la ou les bandes son serons ajouter juste après la bande son actuels
                     -# Si l'option --random est spécifier mélange aléatoirement la playlist avant de l'ajouter dans la file d'attente
                     -# Si l'options --all est spécifier cela ajoutera à la file d'attente toutes les bandes son du résultat de la recherche (par défaut seul le meilleur résultat est ajouter).
@@ -170,9 +176,9 @@ class MusicBot : ListenerAdapter() {
                     -# Affiche la liste des bandes son dans la file d'attente ainsi que la bande son courante
                     -# Si l'option -d ou --delete est spécifiée, supprimez la bande son à l'index indiqué
                     **_chut**
-                    -# Faire taire le bot.
+                    -# Arrête ou fais reprendre la lecture de la bande-son actuelle
                     **_leave**
-                    -# Déconnecte le bot du salon vocal
+                    -# Ferme la session audio
 
                     Legende :
                         **texte gras** = à taper exactement comme indiqué
@@ -181,22 +187,6 @@ class MusicBot : ListenerAdapter() {
                         -a|-b = les options séparées par | ne peuvent pas être utilisées simultanément
                 """.trimIndent()).queue()
             }
-        }
-    }
-
-    fun format_track_title(track: AudioTrack?): String {
-        return "[${track?.info?.title?.replace("_", "")?.replace("*", "")}](<${track?.info?.uri}>)"
-    }
-
-    fun human_readable_duration(duration: Long): String {
-        val hours = duration / 1000 / 60 / 60
-        val minutes = (duration / 1000 / 60) % 60
-        val seconds = (duration / 1000) % 60
-
-        return if (hours > 0) {
-            String.format("%d:%02d:%02d", hours, minutes, seconds)
-        } else {
-            String.format("%02d:%02d", minutes, seconds)
         }
     }
 
@@ -221,5 +211,21 @@ class MusicBot : ListenerAdapter() {
                 println(e.message)
             }
         }
+    }
+}
+
+fun format_track_title(track: AudioTrack?): String {
+    return "[${track?.info?.title?.replace("_", "")?.replace("*", "")}](<${track?.info?.uri}>)"
+}
+
+fun human_readable_duration(duration: Long): String {
+    val hours = duration / 1000 / 60 / 60
+    val minutes = (duration / 1000 / 60) % 60
+    val seconds = (duration / 1000) % 60
+
+    return if (hours > 0) {
+        String.format("%d:%02d:%02d", hours, minutes, seconds)
+    } else {
+        String.format("%02d:%02d", minutes, seconds)
     }
 }
