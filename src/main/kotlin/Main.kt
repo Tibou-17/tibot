@@ -12,9 +12,7 @@ import net.dv8tion.jda.api.exceptions.RateLimitedException
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.cache.CacheFlag
-import java.nio.file.Files
 import javax.security.auth.login.LoginException
-import kotlin.io.path.Path
 
 class MusicBot : ListenerAdapter() {
 
@@ -54,7 +52,11 @@ class MusicBot : ListenerAdapter() {
 
         val ses = getSession(event.guild.id)
 
-        println(msg_content)
+        get_conf().server_custom_conf.find {
+            it.server_id == event.guild.id && it.delete_query_message
+        }?.let { event.message.delete().queue() }
+
+        println("QUERY : " + msg_content)
 
         if (ses == null && (!msg_content.startsWith("_play") && !msg_content.startsWith("_help"))){
             event.channel.sendMessage("Aucune session de musique n'est en cours.\n**Utilisez _help pour obtenir de l'aide.**").queue()
@@ -199,8 +201,7 @@ class MusicBot : ListenerAdapter() {
         @JvmStatic
         fun main(args: Array<String>) {
             try {
-                val token = Files.readString(Path(".token")).trim()
-                JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS,
+                JDABuilder.createLight(get_conf().discord_bot_api_token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MEMBERS,
                     GatewayIntent.GUILD_VOICE_STATES) // Use token provided as JVM argument
                     .enableCache(CacheFlag.VOICE_STATE)
                     .addEventListeners(MusicBot()) // Register new MusicBot instance as EventListener
