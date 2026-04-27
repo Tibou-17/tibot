@@ -1,5 +1,7 @@
 package org.example
 
+import com.github.topi314.lavasrc.deezer.DeezerAudioSourceManager
+import com.github.topi314.lavasrc.spotify.SpotifySourceManager
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
@@ -35,6 +37,17 @@ class AudioSession(event: MessageReceivedEvent) {
     init {
         audioPlayerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault())
         audioPlayerManager.registerSourceManager(YoutubeAudioSourceManager())
+        audioPlayerManager.registerSourceManager(SpotifySourceManager(
+            arrayOf("ytsearch:\"%ISRC%\"", "ytmsearch:\"%QUERY%\""),
+            "",
+            "",
+            "FR",
+            audioPlayerManager
+        ))
+        /*System.setProperty("lavasrc.sources.deezer", "true")
+        audioPlayerManager.registerSourceManager(DeezerAudioSourceManager(
+            "g4el58wc0zvf9na1"
+        ))*/
         audioPlayerManager.registerSourceManager(HttpAudioSourceManager())
         audioPlayerManager.registerSourceManager(LocalAudioSourceManager())
 

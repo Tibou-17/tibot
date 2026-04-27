@@ -10,6 +10,7 @@ repositories {
     mavenCentral()
     maven("https://jitpack.io")
     maven("https://maven.lavalink.dev/releases")
+    maven("https://maven.topi.wtf/releases")
 }
 
 dependencies {
@@ -20,6 +21,9 @@ dependencies {
 
     implementation("club.minnced:jdave-api:0.1.6")
     implementation("club.minnced:jdave-native-linux-aarch64:0.1.6")
+
+    implementation("com.github.topi314.lavasrc:lavasrc:4.8.1")
+    implementation("com.github.topi314.lavasrc:lavasrc-protocol:4.8.1")
 
     implementation("dev.eav.tomlkt:tomlkt:0.6.0")
 }
