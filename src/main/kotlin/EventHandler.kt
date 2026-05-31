@@ -31,13 +31,17 @@ class EventHandler : ListenerAdapter() {
         if (!msg_content.startsWith("_"))
             return
 
+        // Skip discord underline message
+        if (msg_content.startsWith("_") && msg_content.endsWith("_"))
+            return
+
         val current_session = getSession(event.guild.id)
+
+        println("QUERY: [${event.message.author.id}](${event.message.author.name}) " + msg_content)
 
         get_conf().server_custom_conf.find {
             it.server_id == event.guild.id && it.delete_query_message
         }?.let { event.message.delete().queue() }
-
-        println("QUERY : " + msg_content)
 
         if (current_session == null && (!msg_content.startsWith("_play") && !msg_content.startsWith("_help"))){
             event.channel.sendMessage("Aucune session de musique n'est en cours.\n**Utilisez _help pour obtenir de l'aide.**").queue()
