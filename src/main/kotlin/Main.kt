@@ -12,7 +12,7 @@ import javax.security.auth.login.LoginException
 @Throws(IllegalArgumentException::class, LoginException::class, RateLimitedException::class)
 fun main(args: Array<String>) {
     try {
-        JDABuilder.createLight(get_conf().discord_bot_api_token,
+        JDABuilder.createLight(get_conf(args.getOrNull(0) ?: "bot_conf.toml").discord_bot_api_token,
             GatewayIntent.GUILD_MESSAGES,
             GatewayIntent.MESSAGE_CONTENT,
             GatewayIntent.GUILD_MEMBERS,
