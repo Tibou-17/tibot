@@ -23,6 +23,6 @@ fun main(args: Array<String>) {
             .setAudioModuleConfig(AudioModuleConfig().withDaveSessionFactory(JDaveSessionFactory()))
             .build()
     } catch (e: Exception) {
-        println("FATAL ERROR: Fail to start | ${e.cause} ${e.message}")
+        println("FATAL ERROR: Fail to start\n${e.stackTraceToString()}")
     }
 }
