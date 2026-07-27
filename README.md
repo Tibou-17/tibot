@@ -28,8 +28,12 @@ Usage:
 Liste des cibles :
   default   Compile le bot et ses dépendances avec gradlew dans le dossier ./build/libs/ .
   clean     Supprimer les fichiers générés lors de la compilation. (Dossier ./build).
-  run       Compile le bot puis l'exécute sur la JVM local. (Tester avec openjdk 21).
+  run       Compile le bot puis l'exécute sur la JVM local. (Tester avec openjdk "25.0.3" 2026-04-21).
+  deploy    Compile le bot puis exécute le script deploy (Script non fourni dans le dépôt, vous devez le créer vous-même).
   help      Affiche la liste des cibles suivie d'une courte description.
+
+
+$ make run CONF_FILE=test.conf
 ```
 
 # License
