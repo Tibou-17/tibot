@@ -1,0 +1,10 @@
+discord_bot_api_token = "test_token"
+
+# Optionnel
+[[server_custom_conf]]
+server_id = "1"
+delete_query_message = false
+
+[[server_custom_conf]]
+server_id = "2"
+delete_query_message = true
