@@ -9,7 +9,7 @@ import java.nio.file.Paths
 @Serializable
 data class Conf(
     val discord_bot_api_token: String,
-    val server_custom_conf: List<ServerCustomConf>
+    val server_custom_conf: List<ServerCustomConf> = emptyList()
 )
 
 @Serializable
